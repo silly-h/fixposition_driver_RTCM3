@@ -36,9 +36,11 @@ struct FpOutputParams {
     std::string ip;    //!< IP address for TCP connection
     std::string port;  //!< Port for TCP connection
     int baudrate;      //!< baudrate of serial connection
+    std::string portrtcm3;
 };
 struct CustomerInputParams {
     std::string speed_topic;
+    std::string rtcm3_topic;
 };
 
 struct FixpositionDriverParams {

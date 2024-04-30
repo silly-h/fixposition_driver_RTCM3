@@ -116,6 +116,8 @@ class FixpositionDriver {
      */
     virtual bool Connect();
 
+    void SendBufferToClient(const uint8_t* buffer, const int size);
+
     /**
      * @brief Initialize TCP connection
      *
@@ -123,6 +125,7 @@ class FixpositionDriver {
      * @return false fail
      */
     virtual bool CreateTCPSocket();
+    virtual bool CreateTCPRTCM3Socket();
 
     /**
      * @brief Initialize Serial connection
@@ -143,6 +146,7 @@ class FixpositionDriver {
     // TODO: Add more NOV types
 
     int client_fd_ = -1;  //!< TCP or Serial file descriptor
+    int client_fd_rtcm3 = -1;  //!< TCP or Serial file descriptor
     int connection_status_ = -1;
     struct termios options_save_;
 };
