@@ -8,3 +8,4 @@ fp_output:
 
 customer_input:
     speed_topic: "/fixposition/speed"
+    rtcm3_topic: "/rtcm3_data"

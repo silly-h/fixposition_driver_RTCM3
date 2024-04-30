@@ -6,5 +6,9 @@ fp_output:
     rate: 200
     reconnect_delay: 5.0 # wait time in [s] until retry connection
 
+    portrtcm3: "21004"
+
+
 customer_input:
     speed_topic: "/fixposition/speed"
+    rtcm3_topic: "/rtcm3_data"
