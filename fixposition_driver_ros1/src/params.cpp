@@ -28,6 +28,7 @@ bool LoadParamsFromRos1(const std::string& ns, FpOutputParams& params) {
     const std::string FORMATS = ns + "/formats";
     const std::string IP = ns + "/ip";
     const std::string PORT = ns + "/port";
+    const std::string PORTRTCM3 = ns + "/portrtcm3";
     const std::string BAUDRATE = ns + "/baudrate";
     // read parameters
     if (!ros::param::get(RATE, params.rate)) {
@@ -71,6 +72,13 @@ bool LoadParamsFromRos1(const std::string& ns, FpOutputParams& params) {
             params.port = "21000";
             ROS_WARN("Using Default Port : %s", params.port.c_str());
         }
+        if (!ros::param::get(PORTRTCM3, params.portrtcm3)) {
+            // default value for TCP port
+            params.portrtcm3 = "21004";
+            ROS_WARN("Using Default Port : %s", params.portrtcm3.c_str());
+        }
+
+
         ROS_INFO("%s : %s", IP.c_str(), params.ip.c_str());
         ROS_INFO("%s : %s", PORT.c_str(), params.port.c_str());
     } else if (params.type == INPUT_TYPE::SERIAL) {
@@ -91,12 +99,21 @@ bool LoadParamsFromRos1(const std::string& ns, FpOutputParams& params) {
 
 bool LoadParamsFromRos1(const std::string& ns, CustomerInputParams& params) {
     const std::string SPEED_TOPIC = ns + "/speed_topic";
+    const std::string RTCM3_TOPIC = ns + "/rtcm3_topic";
+
     if (!ros::param::get(SPEED_TOPIC, params.speed_topic)) {
         // default value for the topic name
         params.speed_topic = "/fixposition/speed";
         ROS_WARN("Using Default Speed Topic : %s", params.speed_topic.c_str());
     }
     ROS_INFO("%s : %s", SPEED_TOPIC.c_str(), params.speed_topic.c_str());
+
+    // Loading RTCM3 topic parameters
+    if (!ros::param::get(RTCM3_TOPIC, params.rtcm3_topic)) {
+        params.rtcm3_topic = "/rtcm3_data"; 
+        ROS_WARN("Using Default RTCM3 Topic : %s", params.rtcm3_topic.c_str());
+    }
+    ROS_INFO("%s : %s", RTCM3_TOPIC.c_str(), params.rtcm3_topic.c_str());
 
     return true;
 }

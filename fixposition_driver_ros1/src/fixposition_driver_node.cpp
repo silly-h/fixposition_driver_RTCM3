@@ -16,6 +16,9 @@
 #include <eigen_conversions/eigen_msg.h>
 #include <ros/console.h>
 #include <ros/ros.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 /* FIXPOSITION */
 #include <fixposition_driver_lib/converter/imu.hpp>
@@ -57,10 +60,21 @@ FixpositionDriverNode::FixpositionDriverNode(const FixpositionDriverParams& para
                                                             &FixpositionDriverNode::WsCallback, this,
                                                             ros::TransportHints().tcpNoDelay());
 
+    // 订阅rtcm3_data话题
+    rtcm3_sub_ = nh_.subscribe<std_msgs::ByteMultiArray>(params_.customer_input.rtcm3_topic, 100, 
+                                                            &FixpositionDriverNode::rtcmCallback, this, 
+                                                            ros::TransportHints().tcpNoDelay());
+
+    // rtcm3_sub_ = nh_.subscribe<std_msgs::ByteMultiArray>("/rtcm3_data", 100, 
+    //                                                         &FixpositionDriverNode::rtcmCallback, this, 
+    //                                                         ros::TransportHints().tcpNoDelay());
 
 
     RegisterObservers();
 }
+
+
+
 
 void FixpositionDriverNode::RegisterObservers() {
     // NOV_B
@@ -237,6 +251,8 @@ void FixpositionDriverNode::PublishNmea(NmeaMessage data) {
     }
 }
 
+
+
 void FixpositionDriverNode::Run() {
     ros::Rate rate(params_.fp_output.rate);
     while (ros::ok()) {
@@ -254,6 +270,15 @@ void FixpositionDriverNode::Run() {
         }
     }
 }
+
+
+void FixpositionDriverNode::rtcmCallback(const std_msgs::ByteMultiArray::ConstPtr& msg) {
+    // 将接收到的消息数据发送到I/O口
+    const uint8_t* data = reinterpret_cast<const uint8_t*>(msg->data.data());
+    int size = msg->data.size();
+    this->SendBufferToClient(data, size);
+}
+
 
 void FixpositionDriverNode::WsCallback(const fixposition_driver_ros1::SpeedConstPtr& msg) {
     std::unordered_map<std::string, std::vector<std::pair<bool, int>>> measurements;
