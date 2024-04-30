@@ -72,6 +72,44 @@ FixpositionDriver::~FixpositionDriver() {
     }
 }
 
+void FixpositionDriver::SendBufferToClient(const uint8_t* buffer, const int size) {
+
+    switch (params_.fp_output.type) {
+        case INPUT_TYPE::TCP: {
+
+            send(this->client_fd_rtcm3, buffer, size, MSG_DONTWAIT);
+
+            break;
+        }
+
+        case INPUT_TYPE::SERIAL: {
+            // 创建一个局部作用域
+            ssize_t bytes_written = write(this->client_fd_, buffer, size);
+            // if (bytes_written == static_cast<ssize_t>(size)) {
+            //     // 并非所有数据都写入了
+            //     std::cout << "Data successfully written to the client.\n";   
+            // } 
+            // if (bytes_written > 0) {
+            //     std::cout << "Serial - Sent " << bytes_written << " bytes: ";
+            //     for (ssize_t i = 0; i < bytes_written; ++i) {
+            //         std::cout << std::hex << std::setw(2) << std::setfill('0') 
+            //                   << static_cast<int>(buffer[i]) << " ";
+            //     }
+            //     std::cout << std::dec << std::endl;
+            // }
+            break;
+        }
+        default: {
+            std::cerr << "Unknown connection type!\n";
+            break;
+        }
+    }
+}
+
+
+
+
+
 bool FixpositionDriver::Connect() {
     switch (params_.fp_output.type) {
         case INPUT_TYPE::TCP:
@@ -85,6 +123,8 @@ bool FixpositionDriver::Connect() {
             return false;
     }
 }
+
+
 
 void FixpositionDriver::WsCallback(
     const std::unordered_map<std::string, std::vector<std::pair<bool, int>>>& sensors_meas) {
@@ -355,6 +395,39 @@ bool FixpositionDriver::CreateTCPSocket() {
     }
     return true;
 }
+
+bool FixpositionDriver::CreateTCPRTCM3Socket() {
+    if (client_fd_rtcm3 != -1) {
+        std::cerr << "TCP connection already exists.\n";
+        return true;
+    }
+
+    client_fd_rtcm3 = socket(AF_INET, SOCK_STREAM, 0);
+
+    if (client_fd_rtcm3 < 0) {
+        std::cerr << "Error in client creation.\n";
+        return false;
+    } else {
+        std::cout << "Client created.\n";
+    }
+
+    struct sockaddr_in server_address;
+    server_address.sin_family = AF_INET;
+    server_address.sin_addr.s_addr = INADDR_ANY;
+    server_address.sin_port = htons(std::stoi(params_.fp_output.portrtcm3));
+    server_address.sin_addr.s_addr = inet_addr(params_.fp_output.ip.c_str());
+
+    connection_status_ = connect(client_fd_rtcm3, (struct sockaddr*)&server_address, sizeof server_address);
+
+    if (connection_status_ != 0) {
+        std::cerr << "Error on connection of TCP socket: " << strerror(errno) << "\n";
+        return false;
+    }
+    return true;
+}
+
+
+
 
 bool FixpositionDriver::CreateSerialConnection() {
     if (client_fd_ != -1) {
